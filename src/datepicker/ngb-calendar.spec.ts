@@ -63,4 +63,15 @@ describe('ngb-calendar-gregorian', () => {
     expect(calendar.getPrev(new NgbDate(2016, 12, 22), 'y')).toEqual(new NgbDate(2015, 1, 1));
     expect(calendar.getPrev(new NgbDate(2017, 1, 22), 'y')).toEqual(new NgbDate(2016, 1, 1));
   });
+
+  it('should default to Calendar maxDate if over', () => {
+    expect(calendar.getNext(new NgbDate(calendar.maxDate.year + 1, calendar.maxDate.month, calendar.maxDate.day)))
+        .toEqual(NgbDate.from(calendar.maxDate));
+  });
+
+  it('should default to Calendar minDate if under', () => {
+    expect(
+        calendar.getPrev(new NgbDate(calendar.minDate.year - 1, calendar.minDate.month, calendar.minDate.day), 'y', 1))
+        .toEqual(NgbDate.from(calendar.minDate));
+  });
 });

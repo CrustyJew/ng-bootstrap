@@ -60,4 +60,5 @@ describe('ngb-date', () => {
       expect(date.after(new NgbDate(2017, 8, 18))).toBeFalsy();
     });
   });
+
 });

@@ -12,12 +12,13 @@ import {
   EventEmitter,
   Output
 } from '@angular/core';
-import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {ControlValueAccessor, NG_VALUE_ACCESSOR, NG_VALIDATORS, Validator, AbstractControl} from '@angular/forms';
 
 import {NgbDate} from './ngb-date';
 import {NgbDatepicker, NgbDatepickerNavigateEvent} from './datepicker';
 import {DayTemplateContext} from './datepicker-day-template-context';
 import {NgbDateParserFormatter} from './ngb-date-parser-formatter';
+import {NgbCalendar} from './ngb-calendar';
 
 import {positionElements} from '../util/positioning';
 import {NgbDateStruct} from './ngb-date-struct';
@@ -36,9 +37,13 @@ const NGB_DATEPICKER_VALUE_ACCESSOR = {
   selector: 'input[ngbDatepicker]',
   exportAs: 'ngbDatepicker',
   host: {'(change)': 'manualDateChange($event.target.value)', '(keyup.esc)': 'close()', '(blur)': 'onBlur()'},
-  providers: [NGB_DATEPICKER_VALUE_ACCESSOR]
+  providers: [
+    NGB_DATEPICKER_VALUE_ACCESSOR,
+    {provide: NG_VALIDATORS, useExisting: forwardRef(() => NgbInputDatepicker), multi: true}
+  ]
 })
-export class NgbInputDatepicker implements ControlValueAccessor {
+export class NgbInputDatepicker implements ControlValueAccessor,
+    Validator {
   private _cRef: ComponentRef<NgbDatepicker> = null;
   private _model: NgbDate;
   private _zoneSubscription: any;
@@ -116,7 +121,8 @@ export class NgbInputDatepicker implements ControlValueAccessor {
 
   constructor(
       private _parserFormatter: NgbDateParserFormatter, private _elRef: ElementRef, private _vcRef: ViewContainerRef,
-      private _renderer: Renderer, private _cfr: ComponentFactoryResolver, ngZone: NgZone) {
+      private _renderer: Renderer, private _cfr: ComponentFactoryResolver, private _calendar: NgbCalendar,
+      ngZone: NgZone) {
     this._zoneSubscription = ngZone.onStable.subscribe(() => {
       if (this._cRef) {
         positionElements(this._elRef.nativeElement, this._cRef.location.nativeElement, 'bottom-left');
@@ -144,6 +150,26 @@ export class NgbInputDatepicker implements ControlValueAccessor {
     this._model = NgbDate.from(this._parserFormatter.parse(value));
     this._onChange(this._model ? {year: this._model.year, month: this._model.month, day: this._model.day} : null);
     this._writeModelValue(this._model);
+  }
+
+  validate(c: AbstractControl) {
+    this._renderer.setElementClass(this._elRef.nativeElement, 'ngb-datepicker-invalid', false);
+    if (c.value) {
+      let date = NgbDate.from(c.value);
+      if (this._calendar.maxDate.before(date) || this._calendar.minDate.after(date)) {
+        this._renderer.setElementClass(this._elRef.nativeElement, 'ngb-datepicker-invalid', true);
+        return {validateDatepicker: `Value is outside calendar's minDate and maxDate range`};
+      }
+      if (this.maxDate && date.after(this.maxDate)) {
+        this._renderer.setElementClass(this._elRef.nativeElement, 'ngb-datepicker-invalid', true);
+        return {validateDatepicker: `Value is greater than maxDate`};
+      }
+      if (this.minDate && date.before(this.minDate)) {
+        this._renderer.setElementClass(this._elRef.nativeElement, 'ngb-datepicker-invalid', true);
+        return {validateDatepicker: `Value is less than minDate`};
+      }
+    }
+    return null;
   }
 
   isOpen() { return !!this._cRef; }

@@ -142,6 +142,56 @@ describe('NgbInputDatepicker', () => {
 
          expect(inputDebugEl.classes['ng-touched']).toBeTruthy();
        }));
+
+    it('should validate user-entered date against maxDate property', () => {
+      const fixture = createTestCmpt(`<input ngbDatepicker [(ngModel)]="date" [maxDate]="{year:2016,month:11,day:1}">`);
+      const inputDebugEl = fixture.debugElement.query(By.css('input'));
+
+      inputDebugEl.triggerEventHandler('change', {target: {value: '2016-09-10'}});
+      expect(inputDebugEl.classes['ngb-datepicker-invalid']).toBeFalsy();
+
+      inputDebugEl.triggerEventHandler('change', {target: {value: '2017-09-01'}});
+
+      expect(inputDebugEl.classes['ngb-datepicker-invalid']).toBeTruthy();
+    });
+
+    it('should validate user-entered date against minDate property', () => {
+      const fixture = createTestCmpt(`<input ngbDatepicker [(ngModel)]="date" [minDate]="{year:2016,month:11,day:1}">`);
+      const inputDebugEl = fixture.debugElement.query(By.css('input'));
+
+      inputDebugEl.triggerEventHandler('change', {target: {value: '2016-09-10'}});
+      expect(inputDebugEl.classes['ngb-datepicker-invalid']).toBeTruthy();
+
+      inputDebugEl.triggerEventHandler('change', {target: {value: '2017-09-01'}});
+
+      expect(inputDebugEl.classes['ngb-datepicker-invalid']).toBeFalsy();
+    });
+
+    it('should validate user-entered date against Calendar maxDate', () => {
+      const fixture = createTestCmpt(`<input ngbDatepicker [(ngModel)]="date">`);
+      const inputDebugEl = fixture.debugElement.query(By.css('input'));
+
+      inputDebugEl.triggerEventHandler('change', {target: {value: '2016-09-10'}});
+      expect(inputDebugEl.classes['ngb-datepicker-invalid']).toBeFalsy();
+
+      inputDebugEl.triggerEventHandler('change', {target: {value: '9999999-09-01'}});
+      expect(inputDebugEl.classes['ngb-datepicker-invalid']).toBeTruthy();
+    });
+
+    it('should validate user-entered date against Calendar minDate', fakeAsync(() => {
+         const fixture = createTestCmpt(`<input ngbDatepicker [(ngModel)]="date">`);
+         const inputDebugEl = fixture.debugElement.query(By.css('input'));
+
+         fixture.componentInstance.date = {year: -999999, month: 9, day: 1};
+         fixture.detectChanges();
+         tick();
+         expect(inputDebugEl.classes['ngb-datepicker-invalid']).toBeTruthy();
+
+         fixture.componentInstance.date = {year: -99999, month: 9, day: 1};
+         fixture.detectChanges();
+         tick();
+         expect(inputDebugEl.classes['ngb-datepicker-invalid']).toBeFalsy();
+       }));
   });
 
   describe('options', () => {

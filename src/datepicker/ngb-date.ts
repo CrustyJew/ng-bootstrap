@@ -1,15 +1,19 @@
+import {NgbDateStruct} from './ngb-date-struct';
+
 export class NgbDate {
-  static from(date: {year: number, month: number, day?: number}) {
-    return date ? new NgbDate(date.year, date.month, date.day ? date.day : 1) : null;
+  static from(date: {year: number, month?: number, day?: number}) {
+    let nDate = date ? new NgbDate(date.year, date.month ? date.month : 1, date.day ? date.day : 1) : null;
+
+    return nDate;
   }
 
   constructor(public year: number, public month: number, public day: number) {}
 
-  equals(other: NgbDate) {
+  equals(other: NgbDateStruct) {
     return other && this.year === other.year && this.month === other.month && this.day === other.day;
   }
 
-  before(other: NgbDate) {
+  before(other: NgbDateStruct) {
     if (!other) {
       return false;
     }
@@ -25,7 +29,7 @@ export class NgbDate {
     }
   }
 
-  after(other: NgbDate) {
+  after(other: NgbDateStruct) {
     if (!other) {
       return false;
     }
